@@ -1,3 +1,5 @@
 {
-  "name": "Cricket Legends Game"
+  "name": "Cricket Legends Game",
+   "buildCommand": "echo 'Static site'",
+  "outputDirectory": "."
 }
