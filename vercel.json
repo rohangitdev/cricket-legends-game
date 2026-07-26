@@ -1,5 +1,9 @@
 {
-  "name": "Cricket Legends Game",
-   "buildCommand": "echo 'Static site'",
-  "outputDirectory": "."
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
