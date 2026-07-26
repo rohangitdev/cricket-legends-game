@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cricket Legends — Brain Rehab Game</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Graduate&family=Atkinson+Hyperlegible:wght@400;700&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Atkinson Hyperlegible', sans-serif;
+      background: linear-gradient(135deg, #1a3a2a 0%, #0f2818 100%);
+      color: #f5f5f5;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container { max-width: 700px; margin: 0 auto; }
+    
+    h1 { 
+      font-family: 'Graduate', serif;
+      text-align: center;
+      font-size: 2.5rem;
+      margin: 20px 0;
+      color: #d4af37;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    .screen { display: none; }
+    .screen.active { display: block; }
+    
+    button {
+      background: #2d5a3d;
+      color: #d4af37;
+      border: 2px solid #d4af37;
+      padding: 15px 20px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px 0;
+      width: 100%;
+      font-weight: bold;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    
+    button:active { opacity: 0.8; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .scoreboard {
+      background: #2d5a3d;
+      border: 3px solid #d4af37;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .score-value {
+      font-family: 'Graduate', serif;
+      font-size: 2.5rem;
+      color: #d4af37;
+      margin: 10px 0;
+    }
+    
+    .grid { 
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 20px 0;
+    }
+    
+    .card {
+      background: #2d5a3d;
+      border: 2px solid #d4af37;
+      padding: 20px;
+      text-align: center;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      word-break: break-word;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    
+    .card:active { opacity: 0.8; }
+    .card.flipped { background: #d4af37; color: #1a3a2a; font-weight: bold; }
+    .card.matched { opacity: 0.5; }
+    
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+    
+    .topbar button { width: auto; margin: 0; }
+    
+    .level-title {
+      flex: 1;
+      text-align: center;
+      font-family: 'Graduate', serif;
+      font-size: 1.2rem;
+      color: #d4af37;
+    }
+    
+    .timer {
+      font-family: 'Graduate', serif;
+      font-size: 1.2rem;
+      color: #d4af37;
+    }
+    
+    .level-btn {
+      background: #2d5a3d;
+      color: #d4af37;
+      border: 2px solid #d4af37;
+      padding: 15px;
+      margin: 10px 0;
+      width: 100%;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 8px;
+      text-align: left;
+      font-weight: bold;
+    }
+    
+    .completion-screen {
+      text-align: center;
+      margin: 40px 0;
+    }
+    
+    .completion-text {
+      font-size: 1.5rem;
+      margin: 20px 0;
+      color: #d4af37;
+    }
+      @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    .card.matched {
+      animation: pulse 0.3s ease;
+    }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏏 CRICKET LEGENDS</h1>
+    
+    <!-- HOME SCREEN -->
+    <div class="screen active" id="home">
+      <div class="scoreboard">
+        <div>Score: <span class="score-value" id="score">0</span></div>
+        <div>Levels: <span id="levels-done">0/5</span></div>
+      </div>
+      
+      <button onclick="startLevel(1)">Level 1 — Easy</button>
+      <button onclick="startLevel(2)">Level 2 — Medium</button>
+      <button onclick="startLevel(3)">Level 3 — Hard</button>
+      <button onclick="startLevel(4)">Level 4 — Expert</button>
+      <button onclick="startLevel(5)">Level 5 — Legend</button>
+    </div>
+    
+    <!-- GAME SCREEN -->
+    <div class="screen" id="game">
+      <div class="topbar">
+        <button onclick="goHome()">← Home</button>
+        <span class="level-title" id="level-title">Level 1</span>
+        <span class="timer">⏱ <span id="timer">0:00</span></span>
+      </div>
+      
+      <div class="scoreboard">
+        <div>Score: <span class="score-value" id="game-score">0</span></div>
+      </div>
+      
+      <div class="grid" id="grid"></div>
+    </div>
+    
+    <!-- COMPLETION SCREEN -->
+    <div class="screen" id="completion">
+      <div class="completion-screen">
+        <h2>✅ Level Complete!</h2>
+        <div class="completion-text" id="completion-time"></div>
+        <div class="completion-text">Score: <span id="completion-score">0</span></div>
+        <button onclick="nextLevel()">Next Level →</button>
+        <button onclick="goHome()">← Home</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let gameState = {
+      score: 0,
+      currentLevel: 0,
+      levelsDone: [],
+      timerStart: 0,
+      timerInterval: null
+    };
+    
+        const LEVELS = {
+      1: [
+        { q: "🏏 Kapil Dev", a: "1983 World Cup Captain", bg: "#2d5a3d" },
+        { q: "🌟 Sachin Tendulkar", a: "Master Blaster", bg: "#1a3a2a" },
+        { q: "🏟️ Lord's", a: "Home of Cricket", bg: "#2d5a3d" },
+        { q: "👑 Viv Richards", a: "King of Batting", bg: "#1a3a2a" }
+      ],
+      2: [
+        { q: "⭐ Sunil Gavaskar", a: "Little Master", bg: "#2d5a3d" },
+        { q: "🎯 Shane Warne", a: "Ball of Century", bg: "#1a3a2a" },
+        { q: "🏟️ Eden Gardens", a: "Kolkata Stadium", bg: "#2d5a3d" },
+        { q: "🔥 Joel Garner", a: "Big Bird Pacer", bg: "#1a3a2a" },
+        { q: "👨‍💼 Ajit Wadekar", a: "1971 Captain", bg: "#2d5a3d" },
+        { q: "🥊 Syed Kirmani", a: "Wicketkeeper", bg: "#1a3a2a" }
+      ],
+      3: [
+        { q: "💯 Anil Kumble", a: "10 Wickets", bg: "#2d5a3d" },
+        { q: "⚡ Malcolm Marshall", a: "Pace Legend", bg: "#1a3a2a" },
+        { q: "🧿 Bishan Bedi", a: "Spin Artist", bg: "#2d5a3d" },
+        { q: "🏟️ MCG", a: "First Test 1877", bg: "#1a3a2a" },
+        { q: "🎯 Richard Hadlee", a: "431 Wickets", bg: "#2d5a3d" },
+        { q: "🇦🇺 Bill Lawry", a: "Australian Opener", bg: "#1a3a2a" },
+        { q: "6️⃣ Gary Sobers", a: "365 Not Out", bg: "#2d5a3d" },
+        { q: "👆 Gary Sobers", a: "Six Fingers", bg: "#1a3a2a" }
+      ],
+      4: [
+        { q: "👨‍💼 Ajit Wadekar", a: "1971 Captain", bg: "#2d5a3d" },
+        { q: "🎯 Karsan Ghavri", a: "Left Arm Bowler", bg: "#1a3a2a" },
+        { q: "🪝 Rohan Kanhai", a: "Hook Shot Master", bg: "#2d5a3d" },
+        { q: "4️⃣ Sandeep Patil", a: "Six Fours", bg: "#1a3a2a" },
+        { q: "🧿 L. Sivaramakrishnan", a: "Spinner", bg: "#2d5a3d" },
+        { q: "🥊 Farokh Engineer", a: "Wicketkeeper", bg: "#1a3a2a" },
+        { q: "🤾 Eknath Solkar", a: "Great Fielder", bg: "#2d5a3d" },
+        { q: "🇧🇧 Desmond Haynes", a: "West Indies Opener", bg: "#1a3a2a" }
+      ],
+      5: [
+        { q: "🏆 1983 World Cup", a: "India Victory", bg: "#2d5a3d" },
+        { q: "6️⃣ Gary Sobers", a: "365 vs Pakistan", bg: "#1a3a2a" },
+        { q: "💯 Anil Kumble", a: "10 Wickets vs Pakistan", bg: "#2d5a3d" },
+        { q: "⭐ Sunil Gavaskar", a: "10,000 Test Runs", bg: "#1a3a2a" },
+        { q: "🏅 Mohinder Amarnath", a: "1983 MOTM", bg: "#2d5a3d" },
+        { q: "🇮🇳 Kapil Dev", a: "Zimbabwe 175*", bg: "#1a3a2a" },
+        { q: "👑 Virat Kohli", a: "50th ODI Century", bg: "#2d5a3d" },
+        { q: "🌟 Vaibhav Suryavanshi", a: "Young Talent", bg: "#1a3a2a" }
+      ]
+    };
+
+    function startTimer() {
+      gameState.timerStart = Date.now();
+      if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+      gameState.timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - gameState.timerStart) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
+        document.getElementById('timer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      }, 100);
+    }
+
+    function stopTimer() {
+      if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+    }
+
+    function startLevel(level) {
+      gameState.currentLevel = level;
+      const pairs = LEVELS[level];
+      const cards = [];
+      
+      pairs.forEach((pair, idx) => {
+        cards.push({ id: idx, text: pair.q, type: 'q' });
+        cards.push({ id: idx, text: pair.a, type: 'a' });
+      });
+      
+      cards.sort(() => Math.random() - 0.5);
+      
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      
+      cards.forEach((card) => {
+        const btn = document.createElement('button');
+        btn.className = 'card';
+        btn.textContent = '?';
+        btn.dataset.id = card.id;
+        btn.dataset.text = card.text;
+        btn.dataset.bg = card.bg;
+        btn.style.backgroundColor = card.bg;
+        btn.onclick = () => flipCard(btn);
+        grid.appendChild(btn);
+      });
+      
+      document.getElementById('level-title').textContent = `Level ${level}`;
+      document.getElementById('game-score').textContent = gameState.score;
+      document.getElementById('timer').textContent = '0:00';
+      
+      showScreen('game');
+      startTimer();
+    }
+
+    let flipped = [];
+    let matched = 0;
+    
+    function flipCard(btn) {
+      if (btn.classList.contains('flipped') || btn.classList.contains('matched') || flipped.length >= 2) return;
+      
+      btn.classList.add('flipped');
+      btn.textContent = btn.dataset.text;
+      btn.style.backgroundColor = '#d4af37';
+      flipped.push(btn);
+      
+      if (flipped.length === 2) {
+        if (flipped[0].dataset.id === flipped[1].dataset.id) {
+          flipped[0].classList.add('matched');
+          flipped[1].classList.add('matched');
+          playBeep();
+          addConfetti();
+          addConfetti();
+          gameState.score += 50;
+          document.getElementById('game-score').textContent = gameState.score;
+          matched++;
+          
+          const totalCards = document.querySelectorAll('.card').length / 2;
+          if (matched === totalCards) {
+            stopTimer();
+            setTimeout(showCompletion, 800);
+          }
+          
+          flipped = [];
+        } else {
+          setTimeout(() => {
+            flipped[0].classList.remove('flipped');
+            flipped[1].classList.remove('flipped');
+            flipped[0].textContent = '?';
+            flipped[1].textContent = '?';
+            flipped[0].style.backgroundColor = flipped[0].dataset.bg;
+            flipped[1].style.backgroundColor = flipped[1].dataset.bg;
+            flipped = [];
+          }, 1000);
+        }
+      }
+    }
+
+    
+    function playBeep() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 600;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.1);
+    }
+    
+    function playCelebration() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [523, 659, 784, 1047];
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.2, ctx.currentTime + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i * 0.1 + 0.15);
+        osc.start(ctx.currentTime + i * 0.1);
+        osc.stop(ctx.currentTime + i * 0.1 + 0.15);
+      });
+    }
+    
+    function addConfetti() {
+      const card = document.createElement('div');
+      card.textContent = '✨';
+      card.style.position = 'fixed';
+      card.style.left = Math.random() * 100 + '%';
+      card.style.top = '50%';
+      card.style.fontSize = '2rem';
+      card.style.pointerEvents = 'none';
+      card.style.animation = 'fall 1s ease-in forwards';
+      document.body.appendChild(card);
+      setTimeout(() => card.remove(), 1000);
+    }
+
+
+    function showCompletion() {
+      playCelebration();
+      const elapsed = Math.floor((Date.now() - gameState.timerStart) / 1000);
+      const mins = Math.floor(elapsed / 60);
+      const secs = elapsed % 60;
+      
+      document.getElementById('completion-time').textContent = `Time: ${mins}m ${secs}s`;
+      document.getElementById('completion-score').textContent = gameState.score;
+      
+      if (!gameState.levelsDone.includes(gameState.currentLevel)) {
+        gameState.levelsDone.push(gameState.currentLevel);
+      }
+      
+      document.getElementById('levels-done').textContent = `${gameState.levelsDone.length}/5`;
+      
+      showScreen('completion');
+    }
+
+    function nextLevel() {
+      if (gameState.currentLevel < 5) {
+        matched = 0;
+        startLevel(gameState.currentLevel + 1);
+      } else {
+        goHome();
+      }
+    }
+
+    function goHome() {
+      stopTimer();
+      matched = 0;
+      flipped = [];
+      document.getElementById('score').textContent = gameState.score;
+      document.getElementById('levels-done').textContent = `${gameState.levelsDone.length}/5`;
+      showScreen('home');
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+  </script>
+</body>
+</html>
