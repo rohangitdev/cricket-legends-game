@@ -1,0 +1,87 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║     CRICKET LEGENDS GAME - GITHUB & VERCEL DEPLOYMENT GUIDE         ║
+║                    (All from your PHONE!)                           ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+YOUR DETAILS:
+- GitHub: rohangitdev
+- Vercel: rohan@bournedigital.com.au
+- Status: Ready to deploy ✅
+
+═══════════════════════════════════════════════════════════════════════
+
+STEP 1: CREATE GITHUB REPO (2 minutes)
+─────────────────────────────────────────────────────────────
+
+1. Open github.com on your phone
+2. Tap the + icon (top right corner)
+3. Select "New repository"
+4. Fill in:
+   - Repository name: cricket-legends
+   - Description: Cricket brain rehab memory & trivia game
+   - Make it: PUBLIC
+5. Tap "Create repository" ✅
+
+═══════════════════════════════════════════════════════════════════════
+
+STEP 2: UPLOAD FILES TO GITHUB (3 minutes)
+─────────────────────────────────────────────────────────────
+
+After creating repo, you'll see an empty page. Look for:
+✓ "Add file" button → tap it
+✓ Select "Upload files"
+
+FILES TO UPLOAD (from your downloads):
+1. index.html (the actual game)
+2. vercel.json
+3. package.json
+4. README.md
+
+HOW TO UPLOAD:
+- Desktop: Drag & drop the 4 files
+- Phone: Tap "choose your files" → select each one
+
+COMMIT MESSAGE:
+Write: "Initial commit - Cricket Legends game"
+
+Tap "Commit changes" ✅
+
+═══════════════════════════════════════════════════════════════════════
+
+STEP 3: DEPLOY TO VERCEL (3 minutes)
+─────────────────────────────────────────────────────────────
+
+1. Go to vercel.com on your phone
+2. Sign in with GitHub (rohangitdev)
+3. Click "New Project"
+4. Find & select your "cricket-legends" repository
+5. Accept defaults
+6. Click "Deploy" button
+
+🎉 DONE! Your game is LIVE!
+
+Vercel will show you:
+→ Your live URL: https://cricket-legends-[random].vercel.app
+→ Share this link with your friend!
+
+═══════════════════════════════════════════════════════════════════════
+
+WHAT HAPPENS NEXT:
+✓ Game works on desktop, tablet, mobile
+✓ Progress saves locally on his device
+✓ No account needed to play
+
+FUTURE (Supabase Integration):
+✓ Cloud score tracking
+✓ Daily question rotation
+✓ Admin dashboard for you
+✓ Therapist monitoring
+
+═══════════════════════════════════════════════════════════════════════
+
+ANY ISSUES?
+→ Screenshot the error
+→ Ping me from Claude mobile
+→ We'll fix it together!
+
+Ready? Download the 4 files below and start uploading! 🚀
