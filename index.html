@@ -69,6 +69,38 @@
       color: #d4af37;
       margin: 10px 0;
     }
+
+    .streak-box {
+      background: #1a3a2a;
+      border: 2px solid #d4af37;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      text-align: center;
+    }
+
+    .streak-count {
+      font-size: 2rem;
+      color: #ff6b6b;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .daily-challenge {
+      background: #d4af37;
+      color: #1a3a2a;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .daily-challenge.completed {
+      background: #6b9d6e;
+      color: #f5f5f5;
+    }
     
     .grid { 
       display: grid;
@@ -149,6 +181,12 @@
       color: #d4af37;
     }
 
+    .bonus-points {
+      color: #ff6b6b;
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
     .loading {
       text-align: center;
       padding: 40px;
@@ -214,15 +252,25 @@
     <!-- HOME SCREEN -->
     <div class="screen" id="home">
       <div class="scoreboard">
-        <div>Score: <span class="score-value" id="score">0</span></div>
-        <div>Levels: <span id="levels-done">0/5</span></div>
+        <div>Total Score: <span class="score-value" id="score">0</span></div>
+        <div>Levels Completed: <span id="levels-done">0/5</span></div>
+      </div>
+
+      <div class="streak-box">
+        <div>🔥 Daily Streak</div>
+        <div class="streak-count" id="streak-count">0</div>
+        <div id="streak-message">Play daily to build your streak!</div>
+      </div>
+
+      <div class="daily-challenge" id="daily-challenge">
+        🎯 Daily Challenge - Bonus 200 points!
       </div>
       
-      <button onclick="startLevel(1)">Level 1 — Easy</button>
-      <button onclick="startLevel(2)">Level 2 — Medium</button>
-      <button onclick="startLevel(3)">Level 3 — Hard</button>
-      <button onclick="startLevel(4)">Level 4 — Expert</button>
-      <button onclick="startLevel(5)">Level 5 — Legend</button>
+      <button onclick="startLevel(1)">Level 1 — Easy (4 Pairs)</button>
+      <button onclick="startLevel(2)">Level 2 — Medium (5 Pairs)</button>
+      <button onclick="startLevel(3)">Level 3 — Hard (6 Pairs)</button>
+      <button onclick="startLevel(4)">Level 4 — Expert (7 Pairs)</button>
+      <button onclick="startLevel(5)">Level 5 — Legend (8 Pairs)</button>
     </div>
     
     <!-- GAME SCREEN -->
@@ -246,6 +294,7 @@
         <h2>✅ Level Complete!</h2>
         <div class="completion-text" id="completion-time"></div>
         <div class="completion-text">Score: <span id="completion-score">0</span></div>
+        <div id="bonus-text"></div>
         <button onclick="nextLevel()">Next Level →</button>
         <button onclick="goHome()">← Home</button>
       </div>
@@ -257,6 +306,15 @@
     const SUPABASE_URL = 'https://tfqnadbvsbfidwpplbuj.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_DbYjDI6_p2rdDpBvIHII6A_UuP348Nx';
     
+    // Card pairs per level (progressive difficulty)
+    const PAIRS_PER_LEVEL = {
+      1: 4,
+      2: 5,
+      3: 6,
+      4: 7,
+      5: 8
+    };
+    
     let gameState = {
       score: 0,
       currentLevel: 0,
@@ -264,7 +322,11 @@
       timerStart: 0,
       timerInterval: null,
       questionsBank: {},
-      lastQuestionCount: 0
+      lastQuestionCount: 0,
+      streak: 0,
+      lastPlayDate: null,
+      isDailyChallenge: false,
+      dailyChallengeCompleted: false
     };
 
     // Register service worker
@@ -300,8 +362,64 @@
       document.body.appendChild(notif);
       setTimeout(() => notif.remove(), 4000);
     }
+
+    // Load streak from localStorage
+    function loadStreak() {
+      const lastPlayDate = localStorage.getItem('lastPlayDate');
+      const today = new Date().toDateString();
+      const streak = parseInt(localStorage.getItem('streak') || 0);
+
+      if (lastPlayDate === today) {
+        gameState.streak = streak;
+      } else if (lastPlayDate) {
+        const last = new Date(lastPlayDate);
+        const now = new Date();
+        const daysDiff = Math.floor((now - last) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff === 1) {
+          gameState.streak = streak + 1;
+        } else {
+          gameState.streak = 1;
+        }
+      } else {
+        gameState.streak = 1;
+      }
+
+      gameState.lastPlayDate = today;
+      localStorage.setItem('lastPlayDate', today);
+      localStorage.setItem('streak', gameState.streak);
+      localStorage.setItem('score', gameState.score);
+
+      updateStreakDisplay();
+    }
+
+    function updateStreakDisplay() {
+      document.getElementById('streak-count').textContent = gameState.streak + ' 🔥';
+      const msg = gameState.streak > 1 
+        ? `Amazing! Keep it up!` 
+        : `Start your streak today!`;
+      document.getElementById('streak-message').textContent = msg;
+    }
+
+    function checkDailyChallenge() {
+      const today = new Date().toDateString();
+      const lastChallengeDate = localStorage.getItem('lastChallengeDate');
+      const dailyChallengeCompleted = localStorage.getItem('dailyChallengeCompleted') === 'true';
+
+      gameState.isDailyChallenge = lastChallengeDate !== today;
+      gameState.dailyChallengeCompleted = !gameState.isDailyChallenge && dailyChallengeCompleted;
+
+      const challengeEl = document.getElementById('daily-challenge');
+      if (gameState.dailyChallengeCompleted) {
+        challengeEl.classList.add('completed');
+        challengeEl.textContent = '✅ Daily Challenge Completed!';
+      } else if (gameState.isDailyChallenge) {
+        challengeEl.classList.remove('completed');
+        challengeEl.textContent = '🎯 Daily Challenge - Bonus 200 points!';
+      }
+    }
     
-    // Fetch questions from Supabase on page load
+    // Fetch questions from Supabase
     async function loadQuestions() {
       try {
         const response = await fetch(
@@ -337,6 +455,9 @@
           5: data.filter(q => q.level === 5)
         };
         
+        loadStreak();
+        checkDailyChallenge();
+        
         console.log('✅ Loaded', data.length, 'questions from Supabase');
         showScreen('home');
       } catch (err) {
@@ -345,7 +466,7 @@
       }
     }
 
-    function getRandomQuestions(level, count = 4) {
+    function getRandomQuestions(level, count) {
       const allQuestions = gameState.questionsBank[level] || [];
       const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
       return shuffled.slice(0, Math.min(count, allQuestions.length));
@@ -412,7 +533,8 @@
 
     function startLevel(level) {
       gameState.currentLevel = level;
-      const pairs = getRandomQuestions(level, 4);
+      const pairCount = PAIRS_PER_LEVEL[level];
+      const pairs = getRandomQuestions(level, pairCount);
       const cards = [];
       
       pairs.forEach((pair, idx) => {
@@ -496,12 +618,35 @@
       
       document.getElementById('completion-time').textContent = `Time: ${mins}m ${secs}s`;
       document.getElementById('completion-score').textContent = gameState.score;
+
+      let bonusText = '';
+      let bonusPoints = 0;
+
+      // Daily challenge bonus
+      if (gameState.isDailyChallenge && !gameState.dailyChallengeCompleted) {
+        bonusPoints += 200;
+        bonusText += `<div class="bonus-points">🎯 Daily Challenge Bonus: +200 points!</div>`;
+        gameState.score += 200;
+        gameState.dailyChallengeCompleted = true;
+        localStorage.setItem('dailyChallengeCompleted', 'true');
+        localStorage.setItem('lastChallengeDate', new Date().toDateString());
+      }
+
+      // Streak bonus (every 3 days)
+      if (gameState.streak % 3 === 0 && gameState.streak > 0) {
+        bonusPoints += 100;
+        bonusText += `<div class="bonus-points">🔥 Streak Bonus: +100 points!</div>`;
+        gameState.score += 100;
+      }
+
+      document.getElementById('bonus-text').innerHTML = bonusText;
       
       if (!gameState.levelsDone.includes(gameState.currentLevel)) {
         gameState.levelsDone.push(gameState.currentLevel);
       }
       
       document.getElementById('levels-done').textContent = `${gameState.levelsDone.length}/5`;
+      localStorage.setItem('score', gameState.score);
       
       showScreen('completion');
     }
@@ -521,6 +666,8 @@
       flipped = [];
       document.getElementById('score').textContent = gameState.score;
       document.getElementById('levels-done').textContent = `${gameState.levelsDone.length}/5`;
+      updateStreakDisplay();
+      checkDailyChallenge();
       showScreen('home');
     }
 
@@ -529,8 +676,19 @@
       document.getElementById(screenId).classList.add('active');
     }
 
-    // Load questions on page load
-    window.addEventListener('DOMContentLoaded', loadQuestions);
+    // Load score from localStorage
+    function loadScore() {
+      const savedScore = localStorage.getItem('score');
+      if (savedScore) {
+        gameState.score = parseInt(savedScore);
+      }
+    }
+
+    // Load everything on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadScore();
+      loadQuestions();
+    });
   </script>
 </body>
 </html>
